@@ -1,0 +1,14 @@
+{
+  "name": "personal-budget",
+  "version": "1.0.0",
+  "description": "Web App to Keep Track of Budgets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matthew Parkes",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
