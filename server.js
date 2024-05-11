@@ -7,7 +7,7 @@ const envelopesRouter = express.Router();
 
 module.exports = app;
 
-const PORT = process.env.PORT || 4001;
+const PORT = process.env.PORT || 3001;
 
 app.use(express.json())
 app.use('/api', apiRouter)
@@ -41,12 +41,12 @@ class envelope {
 
 
 apiRouter.get('/', (req, res) => {
-    res.send('Hello World!')
+    res.json({ message: "Hello from server!" });
   })
 
 
 envelopesRouter.get('/', (req, res) => {
-    res.send(data.envelopes)
+    res.json(data.envelopes)
   })
 
 
