@@ -1,0 +1,38 @@
+.App-header {
+    height: 15%;
+    background-color: #E1F25C;
+    align-content: center;
+    user-select: none;
+
+}
+.NavContainer{
+    display: block;
+    margin: auto;
+}
+.Totals{
+    display: inline;
+    margin: 50px;
+}
+
+.NavBar{
+    display: inline;
+    float: right;
+    align-content:space-between;
+}
+
+.Title{
+    display: inline;
+}
+
+.AddButton{
+    display: inline;
+    margin: 50px;
+    background-color: #F0F2DF;
+    padding: 5px;
+}
+
+.AddButton:hover {
+
+    cursor: pointer; 
+    box-shadow: 5px 5px;
+}
