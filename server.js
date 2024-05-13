@@ -3,6 +3,7 @@ const app = express();
 const { v4: uuidv4 } = require('uuid');
 const apiRouter = express.Router();
 const envelopesRouter = express.Router();
+var cors = require('cors')
 
 
 module.exports = app;
@@ -10,6 +11,7 @@ module.exports = app;
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json())
+app.use(cors({origin: true}))
 app.use('/api', apiRouter)
 apiRouter.use('/envelope', envelopesRouter);
 

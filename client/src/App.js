@@ -1,5 +1,5 @@
 import logo from './logo.svg';
-import React from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import './App.css';
 import {BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import Header from './header/header';
@@ -7,10 +7,42 @@ import AddEnvelope from './addEnvelope/AddEnvelope';
 
 function App() {
 
-  let ArrayOfEnvelopes =['Groceries', 'Utilities', 'Car', 'test 4', 'test 5', 'test 6']
+  const [ArrayOfEnvelopes, setArray] = useState(['No Envelopes'])
+  const [OverallBudget, setOverallBudget] = useState();
+  const [OverallSpent, setOverallSpent] = useState();
+
+
+
+  
+  const fetchData = useCallback(() => {
+    fetch('http://localhost:3001/api/envelope')
+      .then((res) => res.json())
+      .then((data) => {
+        setArray(data);
+
+        let accBud = 0;
+        let accSpent = 0;
+
+        data.forEach((e) => {
+          accBud += +e.totalBudget;
+          accSpent += +e.totalSpent;
+        });
+
+        setOverallBudget(accBud);
+        setOverallSpent(accSpent);
+      });
+  }, []);
+  
+
+    useEffect(()=> {
+      fetchData()
+   }, [ArrayOfEnvelopes, fetchData])
+  
+
+ 
   const listItems = ArrayOfEnvelopes.map(e =>
     <div className='Envelopes'>
-      <h3>{e}</h3>
+      <h3>{e.name}</h3>
         <div className='breakdownCategory'>
           <ul className='TitleList'>
             <li>Total Budget</li>
@@ -18,9 +50,9 @@ function App() {
             <li>Remaining</li>
           </ul>      
           <ul className='TotalList'>
-            <li>£000.00</li>
-            <li>£000.00</li>
-            <li>£000.00</li>
+            <li>{'£'+ e.totalBudget}</li>
+            <li>{'£'+ e.totalSpent}</li>
+            <li>{'£'+ (e.totalBudget - e.totalSpent)}</li>
           </ul>
         </div>
       <div className='UpdateButton'>Update</div>     
@@ -39,7 +71,7 @@ function App() {
  
   return (
     <Router>
-    <Header></Header>
+    <Header OverallBudget = {OverallBudget}  OverallSpent = {OverallSpent}></Header>
     <Routes>
       <Route path='/' element = {
        <div className="App">
