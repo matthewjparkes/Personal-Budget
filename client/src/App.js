@@ -4,6 +4,7 @@ import './App.css';
 import {BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import Header from './header/header';
 import AddEnvelope from './addEnvelope/AddEnvelope';
+import UpdateEnvelope from './updateEnvelope/updateEnvelope';
 
 function App() {
 
@@ -55,7 +56,7 @@ function App() {
             <li>{'£'+ (e.totalBudget - e.totalSpent)}</li>
           </ul>
         </div>
-      <div className='UpdateButton'>Update</div>     
+      <Link className='UpdateButton' to='/updateEnvelope' envelopeId = {e.id}>Update</Link>     
     </div>
   
   );
@@ -82,6 +83,7 @@ function App() {
       }>
       </Route>
       <Route path ='/addEnvelope' element = {<AddEnvelope/>} />
+      <Route path ='/updateEnvelope' element = {<updateEnvelope/>} />
     </Routes>
   </Router>
   );
