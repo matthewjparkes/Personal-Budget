@@ -3,7 +3,15 @@ const app = express();
 const { v4: uuidv4 } = require('uuid');
 const apiRouter = express.Router();
 const envelopesRouter = express.Router();
-var cors = require('cors')
+var cors = require('cors');
+const Pool = require('pg').Pool;
+const pool = new Pool({
+  user: 'me',
+  host: 'localhost',
+  database: 'BudgetEnvelopes',
+  password: 'password',
+  port: 5432,
+})
 
 
 module.exports = app;
@@ -43,12 +51,19 @@ class envelope {
 
 
 apiRouter.get('/', (req, res) => {
-    res.json({ message: "Hello from server!" });
+    res.send('Hello World')
+
+    
   })
 
 
 envelopesRouter.get('/', (req, res) => {
-    res.json(data.envelopes)
+    pool.query('SELECT * FROM envelopes', (error, results) => {
+        if (error) {
+          throw error
+        }
+        res.status(200).json(results.rows)
+      })
   })
 
 
@@ -131,7 +146,8 @@ envelopesRouter.post('/:from/:to', (req, res, next) => {
 })
 
 envelopesRouter.get('/:id', (req, res, next) => {
-    res.status(200).send('Envelope Found ' + req.envelope.name)
+    console.log(req.index)
+    res.status(200).json(data.envelopes[req.index])
 })
 
 envelopesRouter.put('/:id/update', (req, res, next) => {
@@ -144,7 +160,7 @@ envelopesRouter.put('/:id/update', (req, res, next) => {
 
 
     if(req.body.type === 'AddExpenditure'){
-        data.envelopes[index].totalSpent += req.body.changeExpenditure
+        data.envelopes[index].totalSpent += Number(req.body.changeExpenditure)
         
         res.status(200).send('Expenditure added to ' + req.envelope.name + '. ' + req.body.changeExpenditure + 'added')
 
@@ -159,7 +175,7 @@ envelopesRouter.put('/:id/update', (req, res, next) => {
         return res.status(200).send('Update Successful')
 
     } else if (req.body.type === 'changeBudget'){
-        data.envelopes[index].totalBudget = req.body.changeBudget
+        data.envelopes[index].totalBudget = Number(req.body.changeBudget)
 
         return res.status(200).send(req.envelope.name +' Budget changed to ' +  ' ' + req.body.changeBudget)
 

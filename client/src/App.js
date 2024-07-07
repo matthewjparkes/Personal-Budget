@@ -36,8 +36,9 @@ function App() {
   
 
     useEffect(()=> {
+      console.log('Run Use Effect')
       fetchData()
-   }, [ArrayOfEnvelopes, fetchData])
+   }, [])
   
 
  
@@ -56,7 +57,7 @@ function App() {
             <li>{'£'+ (e.totalBudget - e.totalSpent)}</li>
           </ul>
         </div>
-      <Link className='UpdateButton' to='/updateEnvelope' envelopeId = {e.id}>Update</Link>     
+      <Link className='UpdateButton' to='/updateEnvelope' state={{envelopeid: e.id}}>Update</Link>     
     </div>
   
   );
@@ -83,7 +84,7 @@ function App() {
       }>
       </Route>
       <Route path ='/addEnvelope' element = {<AddEnvelope/>} />
-      <Route path ='/updateEnvelope' element = {<updateEnvelope/>} />
+      <Route path ='/updateEnvelope' element = {<UpdateEnvelope/>} />
     </Routes>
   </Router>
   );
