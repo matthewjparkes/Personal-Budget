@@ -73,27 +73,45 @@ envelopesRouter.post('/', (req, res, next) => {
         return res.status(400).send('Invalid Input')
     }
 
-    if(data.envelopes.some(e => e.name === req.body.name)){
-        console.log('Duplicate')
-        return res.status(409).send('Envelope already added with that name')
-    }
+    pool.query('SELECT * FROM envelopes where name = $1', [req.body.name], (error, results) => {
+        if (error) {
+          throw error
+        }
+        if(results.rows.length > 0) {
+            return res.status(409).send('Envelope already added with that name')
+        }
+        console.log('No Duplicate')
 
+        let newEnvelope = new envelope(req.body.name, req.body.totalBudget)
+
+        pool.query('INSERT INTO envelopes (id, name, total_budget) values ($1, $2, $3)', [newEnvelope.id, newEnvelope.name, newEnvelope.totalBudget], (error, results) => {
+            if (error) {
+              throw error
+            }
+            console.log(results);
+            res.status(200).send('Envelope Added ' + newEnvelope.id)
+          })
+
+      })
+
+ 
     
-    let newEnvelope = new envelope(req.body.name, req.body.totalBudget)
-    data.envelopes.push(newEnvelope);
-    res.status(200).send('Envelope Added ' + data.envelopes[data.envelopes.findIndex(e => e.id === newEnvelope.id)].id)
 })
 
 envelopesRouter.param('id', (req, res, next, id) => {
 
-   let envelope =  data.envelopes.find(e => e.id === id)
-   let index = data.envelopes.findIndex(e => e.id === id)
-   if (!envelope){
-     return res.status(404).send('Envelope Not Found')
-   }
-   req.envelope = envelope; 
-   req.index = index
-   next()
+let envelope;
+
+pool.query('SELECT * FROM envelopes where id = $1', [id], (error, results) => {
+    if (error) {
+        return res.status(404).send('Envelope Not Found ' + error)
+    }
+    console.log(results.rows[0])
+    envelope = results.rows[0]
+    req.envelope = envelope; 
+    next()
+})
+
 
 })
 
@@ -146,8 +164,8 @@ envelopesRouter.post('/:from/:to', (req, res, next) => {
 })
 
 envelopesRouter.get('/:id', (req, res, next) => {
-    console.log(req.index)
-    res.status(200).json(data.envelopes[req.index])
+
+    res.status(200).json(req.envelope)
 })
 
 envelopesRouter.put('/:id/update', (req, res, next) => {
@@ -156,28 +174,52 @@ envelopesRouter.put('/:id/update', (req, res, next) => {
         return res.status(400).send('Invalid Request')
     }
 
-    let index = data.envelopes.findIndex(e => e.id === req.envelope.id)
 
 
     if(req.body.type === 'AddExpenditure'){
-        data.envelopes[index].totalSpent += Number(req.body.changeExpenditure)
+        pool.query('UPDATE envelopes set total_expenditure = $1 where id = $2', [Number(req.body.changeExpenditure), req.envelope.id], (error, results) => {
+            if (error) {
+              throw error
+            }
+            console.log(results);
+            res.status(200).send('Expenditure added to ' + req.envelope.name + '. ' + req.body.changeExpenditure + 'added')
+          })
         
-        res.status(200).send('Expenditure added to ' + req.envelope.name + '. ' + req.body.changeExpenditure + 'added')
-
     } else if (req.body.type === 'changeName') {
-        if(data.envelopes.some(e => e.name === req.body.name)){
-            console.log('Duplicate')
-            return res.status(409).send('Envelope already added with that name')
-        }
-        
-        data.envelopes[index].name = req.body.name
-        console.log('Update')
-        return res.status(200).send('Update Successful')
+
+        pool.query('SELECT * FROM envelopes where name = $1', [req.body.name], (error, results) => {
+            if (error) {
+                throw error
+              }
+              if(results.rows.length > 0) {
+                  return res.status(409).send('Envelope already added with that name')
+              }
+              console.log('No Duplicate')
+
+              pool.query('UPDATE envelopes set name = $1 where id = $2', [req.body.name, req.envelope.id], (error, results) => {
+                if (error) {
+                    throw error
+                  }
+
+                console.log('Update')
+                return res.status(200).send('Update Successful')
+              })
+            })
+
+
+
+
+
 
     } else if (req.body.type === 'changeBudget'){
-        data.envelopes[index].totalBudget = Number(req.body.changeBudget)
 
-        return res.status(200).send(req.envelope.name +' Budget changed to ' +  ' ' + req.body.changeBudget)
+        pool.query('UPDATE envelopes set total_budget = $1 where id = $2', [Number(req.body.changeBudget), req.envelope.id], (error, results) => {
+            if (error) {
+              throw error
+            }
+            console.log(results);
+            res.status(200).send('Expenditure added to ' + req.envelope.name + '. ' + req.body.changeExpenditure + 'added')
+          })
 
     }else {
         return res.status(400).send('Update Type Not Recognised')

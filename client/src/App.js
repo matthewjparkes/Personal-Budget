@@ -25,8 +25,8 @@ function App() {
         let accSpent = 0;
 
         data.forEach((e) => {
-          accBud += +e.totalBudget;
-          accSpent += +e.totalSpent;
+          accBud += +e.total_budget;
+          accSpent += +e.total_expenditure;
         });
 
         setOverallBudget(accBud);
@@ -52,9 +52,9 @@ function App() {
             <li>Remaining</li>
           </ul>      
           <ul className='TotalList'>
-            <li>{'£'+ e.totalBudget}</li>
-            <li>{'£'+ e.totalSpent}</li>
-            <li>{'£'+ (e.totalBudget - e.totalSpent)}</li>
+            <li>{'£'+ e.total_budget}</li>
+            <li>{'£'+ e.total_expenditure}</li>
+            <li>{'£'+ (e.total_budget - e.total_expenditure)}</li>
           </ul>
         </div>
       <Link className='UpdateButton' to='/updateEnvelope' state={{envelopeid: e.id}}>Update</Link>     
