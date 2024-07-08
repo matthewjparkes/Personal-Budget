@@ -20,6 +20,7 @@ function AddEnvelope(){
         console.log(e.target.value)
         setTotalBudget(e.target.value); 
         console.log(TotalBudget)
+        console.log('Test')
     }
 
 
