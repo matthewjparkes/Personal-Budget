@@ -4,11 +4,16 @@
   "description": "Web App to Keep Track of Budgets",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "server": "node server/server.js ",
+    "client-UAT": "npm start --prefix client",
+    "client-PROD": "npm build --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client-UAT\"",
+    "prod": "concurrently \"npm run server\" \"npm run client-PROD\""
   },
   "author": "Matthew Parkes",
   "license": "ISC",
   "dependencies": {
+    "concurrently": "^8.2.2",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "pg": "^8.12.0",
