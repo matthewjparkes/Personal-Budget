@@ -75,6 +75,7 @@ envelopesRouter.post('/', (req, res, next) => {
 
     pool.query('SELECT * FROM envelopes where name = $1', [req.body.name], (error, results) => {
         if (error) {
+          console.log('Test')
           throw error
         }
         if(results.rows.length > 0) {
