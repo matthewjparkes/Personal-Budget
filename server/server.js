@@ -3,6 +3,8 @@ const app = express();
 const { v4: uuidv4 } = require('uuid');
 const apiRouter = express.Router();
 const envelopesRouter = express.Router();
+const transactionRouter = express.Router(); 
+const EnvtransactionRouter = express.Router();
 var cors = require('cors');
 const Pool = require('pg').Pool;
 const pool = new Pool({
@@ -22,6 +24,8 @@ app.use(express.json())
 app.use(cors({origin: true}))
 app.use('/api', apiRouter)
 apiRouter.use('/envelope', envelopesRouter);
+apiRouter.use('/transactions', transactionRouter)
+
 
 
 
@@ -42,8 +46,19 @@ class envelope {
 
     }
 
+}
 
+class transaction {
 
+  constructor(name, amount, recipient, envelopeId){
+
+      this.id = uuidv4();
+      this.name = name
+      this.amount = amount, 
+      this.recipient = recipient,
+      this.envelopeId = envelopeId,
+      this.date = new Date()
+  }
 
 }
 
@@ -55,6 +70,67 @@ apiRouter.get('/', (req, res) => {
 
     
   })
+
+transactionRouter.get('/', (req, res) => {
+
+  pool.query('SELECT * FROM transactions', (error, results) => {
+    if (error) {
+      throw error
+    }
+    res.status(200).json(results.rows)
+  })
+
+})
+
+transactionRouter.param('transid', (req, res, next, transid) => {
+  let transaction;
+  pool.query('SELECT * FROM transactions where id = $1', [transid], (error, results) => {
+      if (error) {
+          return res.status(404).send('Envelope Not Found ' + error)
+      }
+      console.log(results.rows[0])
+      transaction = results.rows[0]
+      req.transaction = transaction; 
+      next()
+  })
+  })
+
+
+transactionRouter.get('/:transid', (req, res, next) => {
+  console.log('Send Back')
+  res.status(200).send(req.transaction)
+})
+
+transactionRouter.put('/:transid', (req, res, next) => {
+  const { transaction } = req
+  const { name, payment_amount, recipient, envelope_id} = req.body
+
+  if (!name || !payment_amount || !recipient || !envelope_id) {
+    return res.status(400).send('Invalid input: All transaction fields must be provided and not null');
+  }
+
+  pool.query('UPDATE transactions SET  name = $2, payment_amount = $3, recipient = $4, envelope_id = $5 where id = $1', [transaction.id, name, payment_amount, recipient, envelope_id], (error, results) => {
+    if (error) {
+        return res.status(404).send('Update' +  error)
+    }
+    res.status(200).send(transaction.id + ' Updated')
+    next()
+})
+ 
+})
+
+transactionRouter.delete('/:transid', (req, res, next) => {
+    const { transaction } = req
+    pool.query('DELETE FROM transactions where id = $1', [transaction.id,], (error, results) => {
+      if (error) {
+          return res.status(404).send('Delete' +  error)
+      }
+      res.status(200).send(transaction.id + ' Deleted')
+      next()
+  })
+})
+
+
 
 
 envelopesRouter.get('/', (req, res) => {
@@ -117,51 +193,66 @@ pool.query('SELECT * FROM envelopes where id = $1', [id], (error, results) => {
 
 envelopesRouter.param('from', (req, res, next, id) => {
     
-    let envelope =  data.envelopes.find(e => e.id === id)
-    let index = data.envelopes.findIndex(e => e.id === id)
-    if (!envelope){
-      return res.status(404).send('Envelope Not Found')
-    }
+  
 
-    if(envelope.totalBudget < +req.headers['movingvalue']){
-      return res.status(400).send('Not Enough Funds in Envelope')
-    }
-
-    data.envelopes[index].totalBudget -= +req.headers['movingvalue']
-    console.log('Subtracted Value from ' + envelope.name)
-    console.log(+req.headers['movingvalue'])
-
-
-    req.fromEnvelope = envelope; 
-    req.fromIndex = index
-    next()
+  pool.query('SELECT * FROM envelopes where id = $1', [id], (error, results) => {
+      if (error) {
+          return res.status(404).send('Envelope Not Found ' + error)
+      }
+      console.log(results.rows[0].total_budget);
+      if(results.rows[0].total_budget < +req.headers['movingvalue']){
+        return res.status(400).send('Not Enough Funds in Envelope')
+      }
+      let envelope = results.rows[0]
+      console.log(+req.headers['movingvalue'])  
+      envelope.updatedValue = (results.rows[0].total_budget - +req.headers['movingvalue'])
+      
+      console.log('Subtracted Value from ' + envelope.name)
+      console.log(+req.headers['movingvalue'])
+      req.fromEnvelope = envelope; 
+      next()
+  })
 
 })
 
 envelopesRouter.param('to', (req, res, next, id) => {
+
+  let envelope;
+
+  pool.query('SELECT * FROM envelopes where id = $1', [id], (error, results) => {
+      if (error) {
+          return res.status(404).send('Envelope Not Found ' + error)
+      }
+      console.log(results.rows[0])
+      envelope = results.rows[0]
+      envelope.updatedValue = envelope.total_budget + +req.headers['movingvalue']
+      console.log('added Value to ' + envelope.name)
+      req.ToEnvelope = envelope; 
+      next()
+  })
     
-    let envelope =  data.envelopes.find(e => e.id === id)
-    let index = data.envelopes.findIndex(e => e.id === id)
-    if (!envelope){
-      return res.status(404).send('Envelope Not Found')
-    }
-
-    
-    data.envelopes[index].totalBudget += +req.headers['movingvalue']
-    console.log('added Value to ' + envelope.name)
-
-
-    req.ToEnvelope = envelope; 
-    req.ToIndex = index
-    next()
-
 })
 
 envelopesRouter.post('/:from/:to', (req, res, next) => {
 
-    res.status(200).send(+req.headers['movingvalue'] + ' moved from ' + req.fromEnvelope.name + ' to ' + req.ToEnvelope.name)
+  const { fromEnvelope, ToEnvelope } = req;
 
-})
+  console.log(fromEnvelope, ToEnvelope)
+
+  pool.query('UPDATE envelopes SET total_budget = $2 where id = $1', [fromEnvelope.id, fromEnvelope.updatedValue], (error) => {
+    if (error) {
+      return res.status(404).send('Update Error' + error)
+  }
+    pool.query('UPDATE envelopes SET total_budget = $2 where id = $1', [ToEnvelope.id, ToEnvelope.updatedValue], (error) => {
+      if (error) {
+        return res.status(404).send('Update Error To Envelope' + error)
+    }
+
+    res.status(200).send(+req.headers['movingvalue']+' moved from ' + fromEnvelope.name + ' to ' + ToEnvelope.name)
+
+  })
+  }
+)})
 
 envelopesRouter.get('/:id', (req, res, next) => {
 
@@ -234,6 +325,65 @@ envelopesRouter.delete('/:id/delete', (req, res, next) => {
 
 
 })
+
+envelopesRouter.use('/:id/transaction', (req, res, next) => {
+
+
+next()
+}, EnvtransactionRouter)
+
+
+EnvtransactionRouter.param('transid', (req, res, next, transid) => {
+  let transaction;
+  pool.query('SELECT * FROM transactions where id = $1', [transid], (error, results) => {
+      if (error) {
+          return res.status(404).send('Envelope Not Found ' + error)
+      }
+      console.log(results.rows[0])
+      transaction = results.rows[0]
+      req.transaction = transaction; 
+      next()
+  })
+  })
+
+
+EnvtransactionRouter.post('/add', (req, res, next) => {
+
+  const { envelope } = req;
+  if (!envelope) {
+    return res.status(400).send('Envelope not found');
+  }
+
+    let transactionToBeAdded =  new transaction(req.body.name, req.body.amount, req.body.recipient, envelope.id)
+
+    pool.query('INSERT INTO transactions (id, name, payment_amount, recipient, envelope_id, transactiondate) values ($1, $2, $3, $4, $5, $6)', [transactionToBeAdded.id, transactionToBeAdded.name, transactionToBeAdded.amount, transactionToBeAdded.recipient, transactionToBeAdded.envelopeId, transactionToBeAdded.date], (error, results) => {
+      if (error) {
+        throw error
+      }
+      console.log(results);
+      res.status(200).send('Transaction added to '+ envelope.id)
+    })
+
+})
+
+EnvtransactionRouter.get('/', (req, res, next) => {
+
+  const { envelope } = req;
+  console.log(envelope)
+  if (!envelope) {
+    return res.status(400).send('Envelope not found');
+  }
+
+  pool.query('SELECT * FROM transactions WHERE envelope_id = $1', [envelope.id], (error, results) => {
+    if (error) {
+      throw error
+    }
+    res.status(200).json(results.rows)
+  })
+
+})
+
+
 
 
 
