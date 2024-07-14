@@ -1,0 +1,247 @@
+openapi: 3.0.1
+info:
+  title: Personal Budget API
+  version: 1.0.0
+  description: >-
+    Ability to manage your budget by dividing your money into different
+    envelopes
+paths:
+  /api/:
+    summary: Base Path
+    description: Only operation on this path is to return 'Hello World'
+  /api/transactions:
+    summary: This path allows you to interact with transactions
+    description: Allows you to edit, read, and delete transactions
+    get:
+      summary: Returns all of transactions in database
+      description: >-
+        Returns a JSON of all of the transactions in the database as well as all
+        information stored in each transaction object - e.g: Name, Id,
+        Envelope_id, payment_amount and recipient name
+      operationId: ''
+      responses:
+        200: 
+          description: Successful Response 
+          content:
+            application/json:
+              examples:
+                Successful Response:
+                  value: |-
+                    [
+                        {
+                            "id": "1d82f993-042f-4b44-a79e-d7c1d394467f",
+                            "name": "ComputerGame",
+                            "payment_amount": 23,
+                            "recipient": "GameStop",
+                            "transactiondate": "2024-07-12T23:00:00.000Z",
+                            "envelope_id": "5236909d-be7c-45d3-b16c-8b39a1328bb8"
+                        },
+                        {
+                            "id": "16509829-53f6-425e-8090-520751aecdbc",
+                            "name": "Train",
+                            "payment_amount": 50,
+                            "recipient": "LNER",
+                            "transactiondate": "2024-07-12T23:00:00.000Z",
+                            "envelope_id": "5236909d-be7c-45d3-b16c-8b39a1328bb8"
+                        },
+                        {
+                            "id": "e0e8799e-4449-401f-bc64-935ede01d6ff",
+                            "name": "Door Repair",
+                            "payment_amount": 50,
+                            "recipient": "Repairman",
+                            "transactiondate": "2024-07-12T23:00:00.000Z",
+                            "envelope_id": "5236909d-be7c-45d3-b16c-8b39a1328bb8"
+                        },
+                        {
+                            "id": "f996293c-ed97-4c85-9ce6-64572fac49ea",
+                            "name": "Computer Repair",
+                            "payment_amount": 50,
+                            "recipient": "Repairman",
+                            "transactiondate": "2024-07-12T23:00:00.000Z",
+                            "envelope_id": "5236909d-be7c-45d3-b16c-8b39a1328bb8"
+                        },
+                        {
+                            "id": "3b180ee6-aaeb-440e-9d73-5e70ab84e2df",
+                            "name": "Laptop Repair",
+                            "payment_amount": 50,
+                            "recipient": "Repairman",
+                            "transactiondate": "2024-07-12T23:00:00.000Z",
+                            "envelope_id": "5236909d-be7c-45d3-b16c-8b39a1328bb8"
+                        }
+                    ]
+  /api/envelopes:
+    summary: Accesses the envelopes for this customer
+    description: Ability to read/edit/delete envelopes for this user
+    get:
+      summary: Return all envelopes and envelope information
+      description: >-
+        Returns the following information: Envelope ID, total_budget,
+        total_expenditure, envelope name
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+    post:
+      summary: Create an Envelope
+      description: Takes a name and total budget and creates an envelope in our database
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+  /api/transactions/{transid}:
+    summary: Ability to read/edit/delete individual transactions
+    get:
+      summary: Returns all of the details of the specified transaction
+      description: >-
+        Returns the following information about the specified transaction: Name,
+        Id, payment amount, recipient, envelope Id
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+    put:
+      summary: Update the values of the specified transaction
+      description: >-
+        Update the name, payment amount, envelope Id, recipient of a specific
+        transaction
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+    delete:
+      summary: Delete the specified transaction
+      description: Delete the transaction specified in the path
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+          
+          
+    parameters:
+    - name: transid
+      in: path
+      description: 'The id of this transaction.'
+      required: true
+      schema:
+        type: string
+  /api/envelopes/{from}/{to}:
+    summary: Transfers value from one envelope to another
+    post:
+      summary: >-
+        Takes two envelope ID's and parameters and a value and transfers that
+        value from the 'from' envelope to the 'to' envelope
+      description: ''
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+    parameters:
+    - name: from
+      in: path
+      description: 'The id of the envelope that you want to move money from.'
+      required: true
+      schema:
+        type: string
+    - name: to
+      in: path
+      description: 'The id of the envelope that you want to move money to.'
+      required: true
+      schema:
+        type: string
+  /api/envelope/{id}:
+    summary: Allows interaction with a specific envelope
+    get:
+      summary: Returns information about a specific envelope
+      description: >-
+        Returns the envelope id, date of creation, total_budget,
+        total_expenditure and name
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+    delete:
+      summary: Delete the specified envelope
+      description: ''
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+          
+          
+    parameters:
+    - name: id
+      in: path
+      description: 'The id of this envelope.'
+      required: true
+      schema:
+        type: string
+  /api/envelopes/{id}/update:
+    summary: Update the values of a specific envelope
+    put:
+      summary: Update the key values of an envelope
+      description: Update the name, total budget, total expenditure of an envelope
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+    parameters:
+    - name: id
+      in: path
+      description: 'The id of this envelope.'
+      required: true
+      schema:
+        type: string
+  /api/envelopes/{id}/transaction/add:
+    summary: Add a transaction to an envelope
+    post:
+      summary: Create a transaction and add it to the specified envelope
+      description: ''
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+          
+      requestBody:
+        description: A new order object
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                # Define the properties of the transaction object here
+                name:
+                  type: string
+                  description: The name of the transaction
+                amount:
+                  type: number
+                  description: Value of the transaction
+                recipient:
+                  type: string
+                  description: Name of the recipient
+    parameters:
+    - name: id
+      in: path
+      description: 'The id of this envelope.'
+      required: true
+      schema:
+        type: string
+    
+           
+  /api/envelopes/{id}/transaction:
+    summary: Read all transactions associated with an envelope
+    get:
+      summary: Read all transactions associated with an envelope
+      description: Returns a JSON of all transactions associated with an envelope
+      operationId: ''
+      responses:
+        default:
+          description: Default error sample response
+          
+    parameters:
+    - name: id
+      in: path
+      description: 'The id of this envelope.'
+      required: true
+      schema:
+        type: string
